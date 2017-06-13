@@ -2,12 +2,12 @@
 % Please edit documentation in R/getProduction.R
 \name{getProduction}
 \alias{getProduction}
-\title{Import production data from an input file stored on my computer}
+\title{Import production data from an input file stored on my computer.}
 \usage{
-getProduction()
+getProduction(env = .GlobalEnv)
 }
 \description{
-Import production data from an input file stored on my computer
+Doesn't take any arguments, and returns a dataframe called prodAll to the global environment.
 }
 \examples{
 getProduction()
