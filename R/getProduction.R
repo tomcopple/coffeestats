@@ -1,5 +1,5 @@
 #' Import production data from an input file stored on my computer
-#'
+#' Doesn't take any arguments, and returns a dataframe called prodAll to the global environment.
 #' @param
 #' @keywords
 #' @export
