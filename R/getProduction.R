@@ -5,12 +5,13 @@
 #' @examples
 #' getProduction()
 
- getProduction <- function(env = .GlobalEnv) {
+getProduction <- function(env = .GlobalEnv) {
 
-    library(tidyverse);library(readxl)
-    basedir <- '~/Dropbox/Work/coffeestats'
+    # Set base data directory
+    setDataDir()
 
-    env$prodAll <- read_csv(file.path(basedir, 'input/production-all.csv')) %>%
+    # Import production-all.csv and process into the global environemnt
+    env$prodAll <- read_csv(file.path(coffeestats, 'input/production-all.csv')) %>%
         gather(., -Country, key = year, value = value) %>%
         mutate(year = substr(year, 0, 4)) %>%
         as_data_frame()
