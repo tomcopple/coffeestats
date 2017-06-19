@@ -9,7 +9,7 @@ getIcoPdfPrices(writeCSV = FALSE, env = .GlobalEnv)
 \description{
 Currently, the ICO provides the last twelve months of daily prices as a pdf on their website.
 This function extracts data from all 12 pdfs and returns a tidy dataframe called prices
-If writeCSV = TRUE, then it also checks for the allprices.csv file in coffeestats/input and adds any missing values.
+If writeCSV = TRUE, then it also checks for the icoPrices.csv file in coffeestats/data and adds any missing values.
 If writeCSV = FALSE, it just returns the prices from the 12 pdfs.
 }
 \examples{

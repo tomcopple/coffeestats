@@ -5,7 +5,7 @@
 #' @examples
 #' setDataDir(folderLocation = "~/Dropbox/Work/coffeestats")
 
-setDataDir <- function(folderLocation = "~/Dropbox/Work/coffeestats",
+setDataDir <- function(folderLocation = "~/Dropbox/Work/coffeestats/data",
                        env = .GlobalEnv) {
 
     env$coffeestats <- folderLocation

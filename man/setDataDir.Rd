@@ -4,7 +4,8 @@
 \alias{setDataDir}
 \title{Set the data folder.}
 \usage{
-setDataDir(folderLocation = "~/Dropbox/Work/coffeestats", env = .GlobalEnv)
+setDataDir(folderLocation = "~/Dropbox/Work/coffeestats/data",
+  env = .GlobalEnv)
 }
 \description{
 I use this to store data in a dropbox folder. All other functions should relate back to this function, so you only need to change it once if the folder moves.
