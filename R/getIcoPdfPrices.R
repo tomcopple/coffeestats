@@ -8,6 +8,7 @@
 #' @examples
 #' getIcoPdfPrices(writeCSV = TRUE)
 #' getIcoPdfPrices()
+#' @export
 
 getIcoPdfPrices <- function(writeCSV = FALSE, env = .GlobalEnv) {
 

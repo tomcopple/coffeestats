@@ -4,6 +4,8 @@
 #' Almost definitely not best practice, but just stores the folder location as a string in the global environment. It seems to work for me
 #' @examples
 #' setDataDir(folderLocation = "~/Dropbox/Work/coffeestats")
+#' 
+#' @export
 
 setDataDir <- function(folderLocation = "~/Dropbox/Work/coffeestats/data",
                        env = .GlobalEnv) {

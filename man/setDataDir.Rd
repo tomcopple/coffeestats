@@ -13,4 +13,5 @@ Almost definitely not best practice, but just stores the folder location as a st
 }
 \examples{
 setDataDir(folderLocation = "~/Dropbox/Work/coffeestats")
+
 }

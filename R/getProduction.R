@@ -4,6 +4,7 @@
 #'
 #' @examples
 #' getProduction()
+#' @export
 
 getProduction <- function(env = .GlobalEnv) {
 

@@ -4,6 +4,7 @@
 #' NB Quandl API key is set in the environmental variables
 #'
 #' @param writeCSV writes any new data to the local data folder. TRUE by default.
+#' @export
 
 getFuturePrices <- function(writeCSV = TRUE, env = .GlobalEnv) {
 
