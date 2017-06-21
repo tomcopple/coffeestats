@@ -19,7 +19,7 @@ getUSDA <- function(url = "https://apps.fas.usda.gov/psdonline/downloads/psd_cof
         tempfile <- tempfile()
         suppressWarnings(download.file(url, destfile = tempfile, quiet = TRUE))
         usdaRaw <- readr::read_csv(file = unz(tempfile, "psd_coffee.csv"),
-                                   col_types = cols())
+                                   col_types = readr::cols())
     },
     error = function(e) {
         stop("Error downloading zip file, check the link address?", call. = FALSE)
