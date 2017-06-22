@@ -35,7 +35,7 @@ getUSDA <- function(url = "https://apps.fas.usda.gov/psdonline/downloads/psd_cof
         ) %>%
         dplyr::mutate(
             ## For some reason the years are always one ahead? Maybe give a reminder to check.
-            year = year - 1,
+            year = as.character(year - 1),
             ## Rename some series to be more consistene
             series = dplyr::case_when(
                 .$series == "Bean Exports" ~ "Green Exports",
@@ -56,13 +56,15 @@ getUSDA <- function(url = "https://apps.fas.usda.gov/psdonline/downloads/psd_cof
                 .$country == "United States" ~ "USA",
                 .$country == "Yemen (Sanaa)" ~ "Yemen",
                 TRUE ~ .$country
-            )
+            ),
+            ## Trying to avoid problems reading in scientific notation
+            value = as.character(value)
         ) %>%
         ## Don't bother with other production, distribution and supply
         dplyr::filter(
             !(series %in% c("Other Production", "Total Distribution", "Total Supply"))
         ) %>%
-        readr::write_csv(
+        readr::write_excel_csv(
             path = file.path(coffeestats, paste0(lubridate::today(), "-usda-tidy.csv"))
         )
 

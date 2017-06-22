@@ -7,9 +7,8 @@
 #' 
 #' @export
 
-setDataDir <- function(folderLocation = "~/Dropbox/Work/coffeestats/data",
-                       env = .GlobalEnv) {
+setDataDir <- function(folderLocation = "~/Dropbox/Work/coffeestats/data") {
 
-    env$coffeestats <- folderLocation
+    coffeestats <<- folderLocation
 
 }
