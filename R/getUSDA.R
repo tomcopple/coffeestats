@@ -64,7 +64,7 @@ getUSDA <- function(url = "https://apps.fas.usda.gov/psdonline/downloads/psd_cof
         dplyr::filter(
             !(series %in% c("Other Production", "Total Distribution", "Total Supply"))
         ) %>%
-        readr::write_excel_csv(
+        readr::write_csv(
             path = file.path(coffeestats, paste0(lubridate::today(), "-usda-tidy.csv"))
         )
 
