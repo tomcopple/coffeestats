@@ -4,7 +4,7 @@
 #' @return icoData A dataframe containing data back to 1990.
 #' @export
 
-getICOhistorical <- function(env = .GlobalEnv) {
+getICOhistorical <- function() {
 
     coffeestats::setDataDir()
 
@@ -43,6 +43,5 @@ getICOhistorical <- function(env = .GlobalEnv) {
         icoData, path = file.path(coffeestats, paste0(lubridate::today(), "-ico-historical.csv"))
         )
 
-    env$icoData <- icoData
-
+    loadICOhistorical()
 }

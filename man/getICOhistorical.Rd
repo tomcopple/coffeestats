@@ -4,7 +4,7 @@
 \alias{getICOhistorical}
 \title{Get ICO historical data}
 \usage{
-getICOhistorical(env = .GlobalEnv)
+getICOhistorical()
 }
 \value{
 icoData A dataframe containing data back to 1990.
