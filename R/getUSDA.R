@@ -73,7 +73,7 @@ getUSDA <- function(url = "https://apps.fas.usda.gov/psdonline/downloads/psd_cof
     # Also produce a flowsheet for easy use in country flowsheets
     usda %>%
         dplyr::filter(
-            year %in% c(2012:2016),
+            year %in% c(2012:2017),
             series %in% c("Opening Stocks", "Arabica Production", "Robusta Production",
                           "Production", "Consumption", "Exports", "Imports", "Ending Stocks")
         ) %>%
