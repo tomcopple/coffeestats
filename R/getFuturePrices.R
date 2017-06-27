@@ -20,7 +20,7 @@ getFuturePrices <- function(writeCSV = TRUE, env = .GlobalEnv) {
 
 
     # Put together Quandl GET request
-    quandlRaw <- Quandl(c('CHRIS/ICE_KC2', 'CHRIS/LIFFE_RC2'),
+    quandlRaw <- Quandl::Quandl(c('CHRIS/ICE_KC2', 'CHRIS/LIFFE_RC2'),
                         start_date = lastDate) %>%
         dplyr::select(Date, dplyr::contains('Settle')) %>%
         dplyr::select(date = 1, arabica = 2, robusta = 3) %>%
