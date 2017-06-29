@@ -8,6 +8,8 @@
 
 getFuturePrices <- function(writeCSV = TRUE, env = .GlobalEnv) {
 
+    library(tidyverse)
+
     # Set Quandl API Key from system environment
     Quandl::Quandl.api_key(api_key = Sys.getenv('QUANDL_APIKEY'))
 
@@ -38,7 +40,10 @@ getFuturePrices <- function(writeCSV = TRUE, env = .GlobalEnv) {
         dplyr::filter(oldFutures, date < min(quandlRaw$date)),
         quandlRaw
     ) %>%
-        readr::write_csv(path = file.path(coffeestats, 'futurePrices.csv'))
+        { if(writeCSV)
+            readr::write_csv(path = file.path(coffeestats, 'futurePrices.csv'))
+            else .
+        }
 
     # Return future prices to the global environment
     env$futurePrices <- newPrices
