@@ -1,8 +1,6 @@
-
-# The getScaleExports function should import export-data, produce the scaleExports csv,
-# produce another function - predExports() - and render a markdown summarising the results.
-
-#' Title
+#' Get scale exports
+#'
+#' Either loads or updates monthly trade statistics, then uses that data to predict exports for next month, and total exports for the crop year.
 #'
 #' @param refresh Set as TRUE to update monthly trade data from ICO website.
 #' @param render Set as TRUE to run a R Markdown report on the data.
@@ -13,9 +11,7 @@
 #' @import lubridate
 #' @importFrom rmarkdown render
 #' @export
-#'
-#' @examples
-#'
+
 getScaleExports <- function(refresh = FALSE, render = FALSE) {
 
     library(tidyverse);library(plotly);library(lubridate)
@@ -30,19 +26,15 @@ getScaleExports <- function(refresh = FALSE, render = FALSE) {
         coffeestats::loadMTS()
     }
 
-    # Assume that we're predicting next month, and checking this month
-    # NB ICO data is minimum 1 month behind
-    predMonth <- floor_date(lubridate::today(), "month") - months(1)
-    checkMonth <- predMonth - months(1)
+    # Set prediction month (i.e. assume it's one month ahead of max in mts)
+    predMonth  <- max(mts$month) + months(1)
 
-    # Import export file, and list of crop years
-    exportsRaw <- readr::read_csv(file.path(coffeestats, "export-data.csv")) %>%
-        rename(country = Country)
+    # Import list of crop years
     cyGroup <- readr::read_csv(file.path(coffeestats, "cropyears.csv")) %>%
         rename(country = Country, cyGroup = Crop.year)
 
     # Merge together, remove Arabica/Robusta/Other/Total and any other NAs
-    exports <- full_join(exportsRaw, cyGroup) %>%
+    exports <- full_join(mts, cyGroup) %>%
         na.omit() %>%
         arrange(country, month) %>%
         # Get crop year - if the month is Apr/Jun/Sep, then use that year
@@ -100,27 +92,27 @@ getScaleExports <- function(refresh = FALSE, render = FALSE) {
         ) %>%
         mutate(predExports = scaleExports * avShare,
                month = predMonth) %>%
-        select(country, cropYear, predMonth = month, scaleExports, predExports)
+        select(country, cropYear, predMonth = month, scaleExports, predExports) %>%
+        # Just remove missing data (Benin, Gabon etc)
+        na.omit()
 
-
-    # Return prediction to global environment as scaleExports
-    scaleExports <- prediction
+    # Also create a dataframe of all raw data, for other predictions etc.
     scaleExportsRaw <- full_join(
         x = exports %>% mutate(mergeMonth = lubridate::month(month)),
         y = exportsAv %>% rename(mergeMonth = month)
     ) %>%
         select(cyGroup, cropYear, country, month, value, avShare, cumSum)
 
-    # And write both as csvs
-    write_csv(scaleExports %>% na.omit(),
+    # And write both as csvs; prediction as scaleExports
+    write_csv(prediction,
               file.path(coffeestats, paste0(lubridate::today(), "-scaleExports.csv")))
     write_csv(scaleExportsRaw,
               file.path(coffeestats, paste0(lubridate::today(), "-scaleExportsRaw.csv")))
 
     # Finally, if render == TRUE, produce a markdown document summarising the results.
     if(render) {
-        rmarkdown::render(file.path(coffeestats,"scaleExports.Rmd"))
-        browseURL(file.path(coffeestats, "scaleExports.html"))
+        rmarkdown::render(system.file("rmd/scaleExportsReport.Rmd", package = "coffeestats"))
+        browseURL(system.file("rmd/scaleExportsReport.html", package = "coffeestats"))
     }
 
     coffeestats::loadScaleExports()

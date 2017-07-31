@@ -2,7 +2,7 @@
 % Please edit documentation in R/getScaleExports.R
 \name{getScaleExports}
 \alias{getScaleExports}
-\title{Title}
+\title{Get scale exports}
 \usage{
 getScaleExports(refresh = FALSE, render = FALSE)
 }
@@ -15,8 +15,5 @@ getScaleExports(refresh = FALSE, render = FALSE)
 Calls loadScaleExports to return scaleExports and scaleExportsRaw
 }
 \description{
-Title
-}
-\examples{
-
+Either loads or updates monthly trade statistics, then uses that data to predict exports for next month, and total exports for the crop year.
 }

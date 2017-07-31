@@ -1,0 +1,233 @@
+---
+title: "Monthly export predictions"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = F, error = F, warning = F, echo = FALSE)
+library(tidyverse);library(lubridate);library(zoo);library(plotly);library(coffeestats)
+coffeestats::loadMTS()
+coffeestats::loadScaleExports()
+coffeestats::setDataDir()
+
+# Set months you're working with. 
+checkMonth <- max(mts$month)
+checkMonthText <- format(checkMonth, "%B %Y")
+predMonth  <- max(mts$month) + months(1)
+predMonthText <- format(predMonth, "%B %Y")
+```
+
+## Introduction
+
+This is an html document which summarises the scaleExports function, and automatically produces a report. 
+
+It should be produced once a month, after the new ICO export data is available. 
+
+It also summarises the findings from last month, and compares them to the actual data which is now available. 
+
+This report will check the results for `r checkMonthText`, and offer a prediction for `r predMonthText`.  
+
+### Monthly Trade Statistics
+
+```{r, include = FALSE}
+# Recreate last month's scaleExports.
+exports2 <- full_join(
+    x = mts %>% filter(month != checkMonth),
+    y = readr::read_csv(file.path(coffeestats, "cropyears.csv")) %>% 
+        rename(country = Country, cyGroup = Crop.year)
+) %>% 
+    na.omit() %>% 
+    arrange(country, month) %>% 
+    mutate(cropYear = ifelse(month.abb[lubridate::month(month)] == cyGroup,
+                             lubridate::year(month),
+                             NA)) %>% 
+    tidyr::fill(cropYear) %>% 
+    filter(cropYear <= lubridate::year(month)) %>% 
+    na.omit()
+exportsAv2 <- exports2 %>% 
+    group_by(country, cropYear) %>% 
+    filter(n() == 12) %>% 
+    arrange(country, month) %>% 
+    mutate(totalExports = sum(value),
+           share = value/totalExports) %>% 
+    group_by(country, lubridate::month(month)) %>% 
+    mutate(avShare = mean(share)) %>% 
+    ungroup() %>% 
+    select(country, month = `lubridate::month(month)`, avShare) %>% 
+    distinct() %>% 
+    group_by(country) %>% 
+    mutate(cumSum = cumsum(avShare))
+checkPrediction <- full_join(
+    x = exports2 %>% 
+        group_by(country, cropYear) %>% 
+        summarise(total = sum(value, na.rm=TRUE)) %>% 
+        filter(cropYear == max(cropYear)),
+    y = exportsAv2 %>% filter(month == lubridate::month(checkMonth - months(1))),
+    by = "country"
+) %>% 
+    mutate(scaleExports = total/cumSum) %>% 
+    select(country, cropYear, scaleExports) %>% 
+    full_join(
+        x = .,
+        y = filter(exportsAv2, month == month(checkMonth))
+    ) %>% 
+    mutate(predExports = scaleExports * avShare, month = checkMonth) %>% 
+    select(country, cropYear, predMonth = month, scaleExports, predExports) %>% 
+    na.omit()
+```
+
+> Summary of what happened in `r checkMonthText`
+
+Total exports in `r checkMonthText` came to `r mts %>% filter(month == checkMonth, country == "TOTAL") %>% magrittr::extract2('value') %>% format(., big.mark = ",")` bags, compared to `r mts %>% filter(month == checkMonth - months(1), country == "TOTAL") %>% magrittr::extract2('value') %>% format(., big.mark = ",")` in `r format(checkMonth - months(1), "%B %Y")`. 
+
+```{r, include = FALSE}
+# Get a comparison of prediction against actual 
+comparison <- full_join(
+    x = mts %>% filter(month == checkMonth, country != "TOTAL", !grepl("Arabica|Robusta", country)),
+    y = checkPrediction %>% select(country, month = predMonth, prediction = predExports)
+) %>% 
+    mutate(diff = value - prediction) %>% 
+    arrange(desc(abs(diff)))
+```
+
+Compared to the prediction, there were major differences in `r paste0(head(comparison$country, 5), collapse = ", ")`, see the graph below. 
+
+```{r, echo = FALSE, out.width="100%"}
+library(plotly)
+compPlot <- comparison %>% 
+    slice(1:20) %>% 
+    mutate(country = ordered(country, levels = country))
+p1 <- plot_ly(compPlot,
+        x = ~diff, y = ~country, type = "bar", orientation = "h", name = "Difference",
+        marker = list(color = "#619fb5"),
+        text = ~paste0(country, ": ", round(diff, 1)), hoverinfo = "text"
+    ) %>% 
+    layout(
+        title = paste("Actual vs. predicted exports for", checkMonthText),
+        xaxis = list(tickangle = 325, title = "", zeroline = FALSE),
+        yaxis = list(title = "", separatethousands = TRUE, autorange = "reversed", side = "right")
+    )
+p2 <- plot_ly(compPlot, x = ~country) %>% 
+    add_bars(
+        y = ~prediction, name = "Prediction",
+        marker = list(color = "#ef8066"),
+        text = ~paste(country, "prediction:", round(prediction, 1)), hoverinfo = "text") %>% 
+    add_bars(
+        y = ~value, name = "Actual",
+        marker = list(color = "#ffcb90"),
+        text = ~paste(country, "actual:", round(value, 1)), hoverinfo = "text") %>% 
+    layout(xaxis = list(title = "", tickangle = 325),
+           yaxis = list(title = "", zeroline = FALSE),
+           barmode = "group")
+subplot(p2, p1) %>% 
+    layout(
+        legend = list(orientation = "h", xanchor = "center", yanchor = "top", y = -0.15, x = 0.6),
+        margin = list(r = 120)
+    )
+```
+
+
+### scaleExports
+
+> Again, this is a prediction for `r predMonthText`
+
+Total exports for `r predMonthText` are estimated at `r format(round(sum(scaleExports$predExports, na.rm = TRUE), 1), big.mark = ",")` bags, compared to `r format(round(sum((scaleExportsRaw %>% filter(month == predMonth - years(1)))$value, na.rm = TRUE), 1), big.mark = ",")` for `r format(predMonth - years(1), "%B %Y")`. 
+
+```{r, echo = FALSE, out.width = "100%"}
+# Like predCountry graph, but for everyone
+# Going to just use Oct-Sep for everyone, rather than crop years
+coffeeYear <- ordered(c(10:12, 1:9),
+                      levels = c(10:12, 1:9))
+globalExports <- exportsRaw %>% 
+    group_by(month) %>% 
+    summarise(totValue = sum(value, na.rm = TRUE)) %>% 
+    mutate(cropYear = ifelse(month(month) == 10, year(month), NA)) %>% 
+    mutate(cropYear = zoo::na.locf(cropYear, na.rm = FALSE)) %>% 
+    na.omit()
+globalExportsAv <- globalExports %>% 
+    group_by(cropYear) %>% 
+    mutate(n = n()) %>% 
+    filter(n == 12) %>% 
+    arrange(month) %>% 
+    mutate(totalExports = sum(totValue),
+           share = totValue/totalExports) %>% 
+    group_by(month(month)) %>% 
+    mutate(avShare = mean(share)) %>% 
+    ungroup() %>% 
+    select(month = `month(month)`, avShare) %>% 
+    distinct() %>% 
+    mutate(cumSum = cumsum(avShare))
+globalExportsPred <- full_join(
+    x = globalExports %>%
+        top_n(n = 1, wt = cropYear) %>% 
+        mutate(month = month(month),
+               totalYear = sum(totValue)),
+    y = globalExportsAv
+) %>% 
+    mutate(scaleExports = totalYear/cumSum,
+           scaleExports = min(scaleExports, na.rm = TRUE),
+           predExports = scaleExports * avShare) %>%
+    select(month, actual = totValue, prediction = predExports, scaleExports) %>% 
+    full_join(
+        x = .,
+        y = globalExports %>% 
+            group_by(month(month)) %>%
+            summarise(min = min(totValue, na.rm = TRUE),
+                      max = max(totValue, na.rm = TRUE)) %>% 
+            rename(month = `month(month)`)
+    ) %>% 
+    mutate(month = ordered(month, 
+                           labels = month.abb[c(10:12, 1:9)],
+                           levels = month))
+p1 <- plot_ly(globalExportsPred, x = ~month) %>% 
+    add_lines(name = "Prediction", y = ~prediction,
+              line = list(color = "#cc593d", dash = "dash"),
+              text = ~paste0(month, " prediction: ", format(round(prediction, 0), big.mark = ",")),
+              hoverinfo = "text") %>% 
+    add_lines(name = "Actual", y = ~actual, 
+              line = list(color = "#cc593d"),
+              text = ~paste0(month, " actual: ", format(round(actual, 0), big.mark = ",")),
+              hoverinfo = "text") %>% 
+    add_ribbons(name = "Min/max", line = list(width = 0), 
+                ymin = ~min, ymax = ~max, hoverinfo = "none",
+                fillcolor = "#ffe090", opacity = 0.4) %>% 
+    layout(title = "Export prediction function for current coffee year",
+           xaxis = list(title = "", tickangle = 270),
+           yaxis = list(title = "", separatethousands = TRUE, ticklen = 20, tickcolor = "#FFF"),
+           margin = list(r = 40))
+p2 <- bind_rows(
+    globalExports %>% 
+        group_by(cropYear) %>% 
+        mutate(n = n()) %>% 
+        filter(n == 12) %>% 
+        summarise(total = sum(totValue)),
+    data_frame(cropYear = max(globalExports$cropYear),
+               total = max(globalExportsPred$scaleExports))
+) %>% 
+    plot_ly(., x = ~cropYear, y = ~total, type = "bar", 
+            marker = list(color = "#6a9eb5"),
+            text = ~paste0(cropYear, ": ", format(round(total, 0), big.mark = ",")), name = "Total",
+            hoverinfo = "text") %>% 
+    layout(xaxis = list(title = ""),
+           yaxis = list(title = "", zeroline = FALSE))
+subplot(p1, p2, widths = c(0.6, 0.4), nrows = 1, margin = 0.05) %>% 
+    layout(legend = list(orientation = "h", xanchor = "center", yanchor = "top", y = -0.2, x = 0.5))
+```
+
+## Appendix
+
+Full scaleExports table for `r predMonthText`. 
+
+```{r, echo = FALSE}
+knitr::kable(scaleExports %>% 
+                 na.omit() %>% 
+                 mutate(cropYear = as.character(cropYear)) %>% 
+                 filter(predExports >= 1, scaleExports >= 0) %>% 
+                 select(country, cropYear, predExports, scaleExports), 
+             digits = 0,
+             row.names=FALSE,
+             col.names = c("Country", "Crop year", predMonthText, "Full year"),
+             align = c("lcrr"),
+             caption = "",
+             format.args = list(big.mark = ","))
+```
+
