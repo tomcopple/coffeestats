@@ -37,7 +37,7 @@ getICOhistorical <- function() {
     }
 
     # Get these four files, might need to double-check links if they ever change.
-    icoData <- purrr::map2_df(
+    icoDataExp <- purrr::map2_df(
         .x = c("1d%20-%20Gross%20Opening%20stocks.xlsx",
                "1a%20-%20Total%20production.xlsx",
                "1b%20-%20Domestic%20consumption.xlsx",
@@ -108,17 +108,18 @@ getICOhistorical <- function() {
         dplyr::mutate(valueCY = (0.25*value) + (0.75*dplyr::lead(value))) %>%
         dplyr::select(country, year, series, value = valueCY)
 
-    # Still need to handle European Union
+    # Still need to handle European Union; take out for now?
+    icoOthersCY <- filter(icoOthersCY, country != "European Union")
 
     # Merge back with other for now
     icoData <- bind_rows(
-        icoData, icoOthersCY
+        icoDataExp, icoOthersCY
     )
 
     # Write to csv for easy loading
-    readr::write_csv(
-        icoData, path = file.path(coffeestats, paste0(lubridate::today(), "-ico-historical.csv"))
-        )
+    # readr::write_csv(
+        # icoData, path = file.path(coffeestats, paste0(lubridate::today(), "-ico-historical.csv"))
+        # )
 
     loadICOhistorical()
 }
