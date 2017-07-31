@@ -14,7 +14,7 @@ getMTS <- function(refresh = TRUE, writeFile = TRUE) {
 
     coffeestats::setDataDir()
 
-    library(stringr);library(tidyverse)
+    library(tidyverse)
 
     # Might be necessary to check the link location if there are problems.
     if(refresh == TRUE) {
@@ -23,7 +23,7 @@ getMTS <- function(refresh = TRUE, writeFile = TRUE) {
 
         # Use the tabulizer package to extract from pdf
         mts <- tabulizer::extract_tables(pdfTable, method = 'data.frame')[[1]] %>%
-            gather(., -X, key = month, value = value) %>%           # Make tidy
+            gather(., -X, key = month, value = value) %>%
             # Fix some of the results
             mutate(
                 # Use case_when (dplyr) to correct some of the names
@@ -40,7 +40,7 @@ getMTS <- function(refresh = TRUE, writeFile = TRUE) {
             ) %>%
             # Remove Colombian, Other and Brazilian; just keep Arabica/Robusta
             filter(!(X %in% c('Colombian Milds', 'Other Milds', 'Brazilian Naturals'))) %>%
-            rename(Country = X) %>%
+            rename(country = X) %>%
             as_data_frame()
 
         # Update any existing data
