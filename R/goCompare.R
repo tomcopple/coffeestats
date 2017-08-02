@@ -21,14 +21,26 @@ goCompare <- function(countryName) {
     if(!exists('prodAll')) { suppressMessages(coffeestats::getProduction()) }
     if(!exists('mts')) { suppressMessages(coffeestats::loadMTS()) }
     if(!exists('prodOther')) {
-        prodOther <<- suppressMessages(readxl::read_excel(
-            path = file.path(coffeestats, "production-estimates.xlsx")
-        ) %>%
-            select(source = Source, country = Country, year = Year, production = Production) %>%
-            # Don't worry about Arabica/Robusta split for now, just use total.
-            group_by(country, source, year) %>%
-            summarise(value = sum(production)) %>%
-            ungroup()
+        suppressMessages(coffeestats::loadUSDA())
+        prodOther <<- suppressMessages(
+            bind_rows(
+                readxl::read_excel(file.path(coffeestats, "production-estimates.xlsx")) %>%
+                    select(country = Country, source = Source, year = Year, production = Production) %>%
+                    # Don't worry about Arabica/Robusta split for now, just use total.
+                    group_by(country, source, year) %>%
+                    summarise(value = sum(production)) %>%
+                    ungroup(),
+                usda %>%
+                    filter(series == "Production") %>%
+                    select(country, year, value) %>%
+                    mutate(source = "USDA"),
+                readr::read_csv(
+                    file = file.path(coffeestats, "2017-04-05-fol-flowsheets.csv")
+                ) %>%
+                    select(country, year, value = production) %>%
+                    mutate(source = "FOL")
+            ) %>%
+            filter(year >= max(year) - 5)
         )
     }
 
