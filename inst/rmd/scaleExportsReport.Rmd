@@ -28,7 +28,7 @@ This report will check the results for `r checkMonthText`, and offer a predictio
 
 ### Monthly Trade Statistics
 
-```{r, include = FALSE}
+```{r, include = FALSE}we
 # Recreate last month's scaleExports.
 exports2 <- full_join(
     x = mts %>% filter(month != checkMonth),
@@ -73,6 +73,15 @@ checkPrediction <- full_join(
     mutate(predExports = scaleExports * avShare, month = checkMonth) %>% 
     select(country, cropYear, predMonth = month, scaleExports, predExports) %>% 
     na.omit()
+
+full_join(
+    checkPrediction %>% 
+        select(country, cropYear, oldScale = scaleExports),
+    scaleExports %>% 
+        select(country, cropYear, newScale = scaleExports)
+) %>% 
+    mutate(diff = newScale - oldScale) %>% 
+    readr::write_csv(file.path(coffeestats, paste0(lubridate::today(), "-checkScale.csv")))
 ```
 
 > Summary of what happened in `r checkMonthText`
