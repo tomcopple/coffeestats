@@ -14,7 +14,11 @@ loadFlowsheetData <- function(env = .GlobalEnv) {
         path = file.path(coffeestats, "my-flowsheets.xlsx"),
         sheet = "flowsheetsSummary"
     ) %>%
-        gather(., -series, -source, -country, key = year, value = value)
+        gather(., -series, -source, -country, key = year, value = value) %>%
+        mutate(
+            country = ifelse(grepl("Ivoire", country), "Cote d'Ivoire", country),
+            year = as.integer(year)
+            )
 
     env$flow <- flow
 
