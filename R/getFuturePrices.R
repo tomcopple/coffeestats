@@ -41,8 +41,7 @@ getFuturePrices <- function(writeCSV = TRUE, env = .GlobalEnv) {
         quandlRaw
     ) %>%
         { if(writeCSV)
-            readr::write_csv(path = file.path(coffeestats, 'futurePrices.csv'))
-            else .
+            readr::write_csv(x = ., path = file.path(coffeestats, 'futurePrices.csv'))
         }
 
     # Return future prices to the global environment
