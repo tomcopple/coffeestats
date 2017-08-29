@@ -12,38 +12,30 @@
 #' @importFrom lubridate year month
 #' @importFrom magrittr extract2
 
-goCompare <- function(countryName) {
+goCompare <- function(countryName, refresh = FALSE) {
 
     library(tidyverse);library(coffeestats)
 
     coffeestats::setDataDir()
 
-    if(!exists('prodAll')) { suppressMessages(coffeestats::getProduction()) }
-    if(!exists('mts')) { suppressMessages(coffeestats::loadMTS()) }
-    if(!exists('prodOther')) {
-        suppressMessages(coffeestats::loadUSDA())
-        prodOther <<- suppressMessages(
-            bind_rows(
-                readxl::read_excel(file.path(coffeestats, "production-estimates.xlsx")) %>%
-                    select(country = Country, source = Source, year = Year, production = Production) %>%
-                    # Don't worry about Arabica/Robusta split for now, just use total.
-                    group_by(country, source, year) %>%
-                    summarise(value = sum(production)) %>%
-                    ungroup(),
-                usda %>%
-                    filter(series == "Production") %>%
-                    select(country, year, value) %>%
-                    mutate(source = "USDA"),
-                readr::read_csv(
-                    file = file.path(coffeestats, "2017-04-05-fol-flowsheets.csv")
-                ) %>%
-                    select(country, year, value = production) %>%
-                    mutate(source = "FOL")
-            ) %>%
+    # Using USDA/ICO/FOL data from my-flowsheets and others from production-estimates
+    # Only load if either not in global env or if refresh is TRUE
+    if(!exists('mts') | refresh) { suppressMessages(coffeestats::loadMTS()) }
+    if(!exists('flow') | refresh) { suppressMessages(coffeestats::loadFlowsheetData()) }
+    prodCompare <- suppressMessages(
+        bind_rows(
+            readxl::read_excel(file.path(coffeestats, "production-estimates.xlsx")) %>%
+                select(country = Country, source = Source, year = Year, production = Production) %>%
+                # Don't worry about Arabica/Robusta split for now, just use total.
+                group_by(country, source, year) %>%
+                summarise(value = sum(production)) %>%
+                ungroup(),
+            flow %>%
+                filter(series == "Production") %>%
+                select(country, source, year, value)
+        ) %>%
             filter(year >= max(year) - 5)
         )
-    }
-
 
     # Import crop year info
     cy <- suppressMessages(readr::read_csv(
@@ -52,15 +44,10 @@ goCompare <- function(countryName) {
 
     # Put everything together
     compData <- suppressMessages(
-        bind_rows(
-        prodAll %>% rename(country = Country) %>% mutate(source = "ICO", year = as.numeric(year)),
-        prodOther
-    ) %>%
-        full_join(
-            x = ., y = rename(cy, country = Country, cropYear = Crop.year)
-        ) %>%
-        filter(year >= max(year) - 5) %>%
-        mutate(source = forcats::fct_relevel(source, "ICO"))
+        full_join(x = prodCompare, y = cy) %>%
+            na.omit() %>%
+            filter(year >= max(year) - 5) %>%
+            mutate(source = forcats::fct_relevel(source, "ME"))
     )
 
     # Production graph and table
