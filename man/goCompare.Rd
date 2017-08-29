@@ -4,7 +4,7 @@
 \alias{goCompare}
 \title{Go Compare}
 \usage{
-goCompare(countryName)
+goCompare(countryName, refresh = FALSE)
 }
 \arguments{
 \item{countryName}{Case sensitive, needs to be a country in the system.}
