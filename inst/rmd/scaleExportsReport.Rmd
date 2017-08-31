@@ -28,12 +28,12 @@ This report will check the results for `r checkMonthText`, and offer a predictio
 
 ### Monthly Trade Statistics
 
-```{r, include = FALSE}we
+```{r, include = FALSE}
 # Recreate last month's scaleExports.
 exports2 <- full_join(
     x = mts %>% filter(month != checkMonth),
     y = readr::read_csv(file.path(coffeestats, "cropyears.csv")) %>% 
-        rename(country = Country, cyGroup = Crop.year)
+        rename(cyGroup = cropYear)
 ) %>% 
     na.omit() %>% 
     arrange(country, month) %>% 
@@ -146,7 +146,7 @@ Total exports for `r predMonthText` are estimated at `r format(round(sum(scaleEx
 # Going to just use Oct-Sep for everyone, rather than crop years
 coffeeYear <- ordered(c(10:12, 1:9),
                       levels = c(10:12, 1:9))
-globalExports <- exportsRaw %>% 
+globalExports <- scaleExportsRaw %>% 
     group_by(month) %>% 
     summarise(totValue = sum(value, na.rm = TRUE)) %>% 
     mutate(cropYear = ifelse(month(month) == 10, year(month), NA)) %>% 
