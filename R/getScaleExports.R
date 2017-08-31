@@ -31,7 +31,7 @@ getScaleExports <- function(refresh = FALSE, render = FALSE) {
 
     # Import list of crop years
     cyGroup <- readr::read_csv(file.path(coffeestats, "cropyears.csv")) %>%
-        rename(country = Country, cyGroup = Crop.year)
+        rename(cyGroup = cropYear)
 
     # Merge together, remove Arabica/Robusta/Other/Total and any other NAs
     exports <- full_join(mts, cyGroup) %>%
