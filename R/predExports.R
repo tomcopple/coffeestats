@@ -75,6 +75,7 @@ predExports <- function(getCountry, table = TRUE) {
         select(country, cropMonth, actual, prediction, scaleExports)
     if(table) {
         print(t1)
+        .GlobalEnv$t1 <- t1
     }
 
     return(p1)
