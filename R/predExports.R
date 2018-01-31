@@ -36,7 +36,8 @@ predExports <- function(getCountry, table = TRUE) {
         y = countryRaw %>%
             filter(cropYear.x != cropYear.y) %>%
             group_by(cropMonth) %>%
-            mutate(min = min(value), max = max(value), prediction = avShare * scaleExports) %>%
+            mutate(min = min(value), max = max(value),
+                   prediction = avShare * scaleExports) %>%
             select(country, cropMonth, min, max, prediction) %>%
             slice(1)
     ) %>%
@@ -45,7 +46,8 @@ predExports <- function(getCountry, table = TRUE) {
             y = countryRaw %>%
                 filter(cropYear.x == cropYear.y - 1) %>%
                 select(country, cropMonth, lastYear = value)
-        )
+        ) %>%
+        mutate(exportsToDate = cumsum(actual))
 
     p1 <- plot_ly(countrySummary, x = ~cropMonth) %>%
         add_ribbons(name = "Min/max", line = list(width = 0),
@@ -72,7 +74,7 @@ predExports <- function(getCountry, table = TRUE) {
                             ticklen = 20, tickcolor = "#FFF"))
 
     t1 <- countrySummary %>%
-        select(country, cropMonth, actual, prediction, scaleExports)
+        select(country, cropMonth, actual, prediction, exportsToDate, scaleExports)
     if(table) {
         print(t1)
         .GlobalEnv$t1 <- t1

@@ -22,6 +22,7 @@ goCompare <- function(countryName, refresh = FALSE) {
     # Only load if either not in global env or if refresh is TRUE
     if(!exists('mts') | refresh) { suppressMessages(coffeestats::loadMTS()) }
     if(!exists('flow') | refresh) { suppressMessages(coffeestats::loadFlowsheetData()) }
+
     prodCompare <- suppressMessages(
         bind_rows(
             readxl::read_excel(file.path(coffeestats, "production-estimates.xlsx")) %>%
@@ -117,10 +118,7 @@ goCompare <- function(countryName, refresh = FALSE) {
         )
     )
 
-    tableExp <- compExp %>%
-        filter(monthFac <= last(monthFac)) %>%
-        group_by(cropYear) %>%
-        summarise(exports_to_date = sum(value))
+    tableExp <- coffeestats::getExportsToDate(countryName)
 
     print(tableExp)
     print(tableProd %>% mutate(value = round(value, 0)) %>% spread(key = year, value = value))
