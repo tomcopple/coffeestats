@@ -54,7 +54,7 @@ getICOprices <- function(writeCSV = TRUE) {
                                icoNew)
     } else {
         # Otherwise have to try the pdfs
-        print("Need to go back further, trying th epdf tables. This might take a while")
+        print("Need to go back further, trying the pdf tables. This might take a while")
         baseurl <- "http://www.ico.org/prices/p1-"
         i <- 1
         while(min(icoNew$date) > max(icoOld$date) & i <= 12) {
