@@ -116,10 +116,11 @@ getICOhistorical <- function() {
         icoDataExp, icoOthersCY
     )
 
-    # Write to csv for easy loading
-    # readr::write_csv(
-        # icoData, path = file.path(coffeestats, paste0(lubridate::today(), "-ico-historical.csv"))
-        # )
+    # Write to csv for easy loading - why was this commented out?
+    readr::write_csv(icoData, path = file.path(
+        coffeestats,
+        paste0(lubridate::today(), "-ico-historical.csv")
+    ))
 
     loadICOhistorical()
 }
