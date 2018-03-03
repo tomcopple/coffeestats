@@ -39,8 +39,9 @@ getFuturePrices <- function(writeCSV = TRUE, env = .GlobalEnv) {
     newPrices <- dplyr::bind_rows(
         dplyr::filter(oldFutures, date < min(quandlRaw$date)),
         quandlRaw
-    ) %>%
-        { if(writeCSV)
+    )
+
+    if(writeCSV) {
             readr::write_csv(x = ., path = file.path(coffeestats, 'futurePrices.csv'))
         }
 
